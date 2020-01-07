@@ -1,0 +1,15 @@
+bin/
+obj/
+Debug/
+Release/
+
+.vs/
+.idea/
+
+packages/
+
+_ReSharper*/
+*.csproj.user
+*.DotSettings.user
+
+launchSettings.json
