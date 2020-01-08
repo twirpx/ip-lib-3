@@ -4,11 +4,23 @@ namespace IPLib3 {
     public struct UInt128 : IEquatable<UInt128>, IComparable, IComparable<UInt128> {
         
         private ulong m_0;
+
+        public ulong UL0 => m_0;
         
+        public uint UI0 => (uint)(m_0 & 0xFFFFFFFF);
+        
+        public uint UI1 => (uint)((m_0 >> 32) & 0xFFFFFFFF);
+
         private ulong m_1;
 
+        public ulong UL1 => m_1;
+        
+        public uint UI2 => (uint)(m_1 & 0xFFFFFFFF);
+        
+        public uint UI3 => (uint)((m_1 >> 32) & 0xFFFFFFFF);
+
         public override bool Equals(object obj) {
-            return obj is UInt128 && Equals((UInt128)obj);
+            return obj is UInt128 u && Equals(u);
         }
 
         // ReSharper disable NonReadonlyMemberInGetHashCode
