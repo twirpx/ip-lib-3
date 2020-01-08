@@ -288,6 +288,7 @@ namespace IPLib3.Filtering {
         }
 
         public void SaveTo(Stream stream) {
+            // IPF3
             stream.WriteByte(0x69);
             stream.WriteByte(0x70);
             stream.WriteByte(0x66);
@@ -394,7 +395,7 @@ namespace IPLib3.Filtering {
                 filter = null;
                 return false;
             }
-            // IPF2
+            // IPF3
             if (h1 != 0x69 || h2 != 0x70 || h3 != 0x66 || h4 != 0x33) {
                 filter = null;
                 return false;

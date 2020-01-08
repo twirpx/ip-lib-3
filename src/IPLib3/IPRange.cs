@@ -87,5 +87,12 @@ namespace IPLib3 {
         }
 #pragma warning restore 618
 
+        public bool ContainsIP(IPAddress ip) {
+            UInt128 start = Start.ToUInt128();
+            UInt128 u = ip.ToUInt128();
+            UInt128 end = End.ToUInt128();
+            return start <= u && u <= end;
+        }
+        
     }
 }
