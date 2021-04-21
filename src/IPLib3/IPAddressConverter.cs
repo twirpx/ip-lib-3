@@ -8,12 +8,8 @@ namespace IPLib3 {
         
         public static UInt32 ToUInt32(this IPAddress ip) {
             byte[] bytes = ip.GetAddressBytes();
-            return BitConverter.ToUInt32(bytes.Swap(), 0);
-        }
-        
-        public static byte[] ToBytes(this IPAddress ip) {
-            byte[] bytes = ip.GetAddressBytes();
-            return bytes.Swap();
+            Array.Reverse(bytes, 0, bytes.Length);
+            return BitConverter.ToUInt32(bytes, 0);
         }
 
         public static UInt128 ToUInt128(this IPAddress ip) {
@@ -26,14 +22,14 @@ namespace IPLib3 {
             }
             
             byte[] bytes = ip.GetAddressBytes();
-            
-            return (UInt128)bytes.Swap();
+            Array.Reverse(bytes, 0, bytes.Length);
+            return (UInt128)bytes;
         }
 
         public static IPAddress ToIPAddress(this UInt128 u) {
             byte[] bytes = u.GetBytes();
-            
-            IPAddress ip = new IPAddress(bytes.Swap());
+            Array.Reverse(bytes, 0, bytes.Length);
+            IPAddress ip = new IPAddress(bytes);
             
             if (ip.IsIPv4MappedToIPv6) {
                 return ip.MapToIPv4();
@@ -44,11 +40,8 @@ namespace IPLib3 {
         
         public static IPAddress ToIPAddress(this uint u) {
             byte[] bytes = BitConverter.GetBytes(u);
-            return new IPAddress(bytes.Swap());
-        }
-        
-        public static IPAddress ToIPAddress(this byte[] bytes) {
-            return new IPAddress(bytes.Swap());
+            Array.Reverse(bytes, 0, bytes.Length);
+            return new IPAddress(bytes);
         }
         
     }

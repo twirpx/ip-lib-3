@@ -161,7 +161,7 @@ namespace IPLib3 {
                 c.m_0 = a.m_0;
                 c.m_1 = a.m_1;
             } else if (b < 64) {
-                c.m_1 = a.m_1 << b | a.m_0 >> (b - 64);
+                c.m_1 = a.m_1 << b | a.m_0 >> (64 - b);
                 c.m_0 = a.m_0 << b;
             } else if (b == 64) {
                 c.m_0 = 0;

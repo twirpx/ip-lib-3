@@ -7,12 +7,25 @@ namespace IPLib3 {
 
         public IPRange(IPAddress start, IPAddress end) {
             Start = start;
+            StartUI = start.ToUInt128();
             End = end;
+            EndUI = end.ToUInt128();
+        }
+
+        public IPRange(UInt128 start, UInt128 end) {
+            Start = start.ToIPAddress();
+            StartUI = start;
+            End = end.ToIPAddress();
+            EndUI = end;
         }
 
         public IPAddress Start { get; }
         
         public IPAddress End { get; }
+
+        public UInt128 StartUI { get; }
+        
+        public UInt128 EndUI { get; }
 
         private static readonly Regex REGEX_V4_RANGE = new Regex(@"(?<i>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\s*-\s*(?<j>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline);
         private static readonly Regex REGEX_V4_CIDR = new Regex(@"(?<i>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\s*/\s*(?<m>[0-9]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline);
@@ -78,7 +91,7 @@ namespace IPLib3 {
                     jj = ~jj;
                     jj = ii + jj;
                     
-                    range = new IPRange(ii.ToIPAddress(), jj.ToIPAddress());
+                    range = new IPRange(ii, jj);
                     return true;
                 }
             }
@@ -88,10 +101,12 @@ namespace IPLib3 {
 #pragma warning restore 618
 
         public bool ContainsIP(IPAddress ip) {
-            UInt128 start = Start.ToUInt128();
             UInt128 u = ip.ToUInt128();
-            UInt128 end = End.ToUInt128();
-            return start <= u && u <= end;
+            return StartUI <= u && u <= EndUI;
+        }
+
+        public bool ContainsIP(UInt128 ui) {
+            return StartUI <= ui && ui <= EndUI;
         }
         
     }
