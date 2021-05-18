@@ -450,7 +450,7 @@ namespace IPLib3.Filtering {
                     int read = stream.Read(bytes, 0, length);
 
                     if (read == length) {
-                        node.LValue = Encoding.UTF8.GetString(bytes);
+                        node.LValue = String.Intern(Encoding.UTF8.GetString(bytes));
                     } else {
                         node = null;
                         return false;
@@ -487,7 +487,7 @@ namespace IPLib3.Filtering {
                     byte[] bytes = new byte[length];
                     int read = stream.Read(bytes, 0, length);
                     if (read == length) {
-                        node.RValue = Encoding.UTF8.GetString(bytes);
+                        node.RValue = String.Intern(Encoding.UTF8.GetString(bytes));
                     } else {
                         node = null;
                         return false;

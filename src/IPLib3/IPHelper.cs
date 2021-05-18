@@ -1,18 +1,35 @@
-using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 
 namespace IPLib3 {
     public static class IPHelper {
 
-        public static string FormatIPs(IPAddress[] ips) {
-            string[] strings = Array.ConvertAll(ips, ip => ip.ToString());
+        public static string FormatIPs(IReadOnlyList<IPAddress> ips) {
+            StringBuilder sb = new StringBuilder();
+            
+            foreach (IPAddress ip in ips) {
+                if (sb.Length > 0) {
+                    sb.Append(" ");
+                }
 
-            return String.Join(" ", strings);
+                sb.Append(ip);
+            }
+
+            return sb.ToString();
         }
 
-        public static IPAddress[] ExcludePrivateAndLocals(IPAddress[] ips) {
-            return Array.FindAll(ips, ip => !IsPrivateOrLocal(ip));
+        public static IReadOnlyList<IPAddress> ExcludePrivateAndLocals(IReadOnlyList<IPAddress> ips) {
+            List<IPAddress> result = new List<IPAddress>();
+            
+            foreach (IPAddress ip in ips) {
+                if (!IsPrivateOrLocal(ip)) {
+                    result.Add(ip);
+                }
+            }
+            
+            return result;
         }
 
         private static bool IsPrivateOrLocal(IPAddress ip) {
