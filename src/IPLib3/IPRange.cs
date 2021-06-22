@@ -108,6 +108,6 @@ namespace IPLib3 {
         public bool ContainsIP(UInt128 ui) {
             return StartUI <= ui && ui <= EndUI;
         }
-        
+
     }
 }
