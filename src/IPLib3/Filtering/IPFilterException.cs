@@ -1,17 +1,16 @@
-using System;
 using System.Runtime.Serialization;
 
-namespace IPLib3.Filtering {
-    [ Serializable ]
-    public class IPFilterException : Exception {
+namespace IPLib3.Filtering; 
 
-        public IPFilterException() { }
+[ Serializable ]
+public class IPFilterException : Exception {
 
-        public IPFilterException(string message) : base(message) { }
+    public IPFilterException() { }
 
-        public IPFilterException(string message, Exception inner) : base(message, inner) { }
+    public IPFilterException(string message) : base(message) { }
 
-        protected IPFilterException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    public IPFilterException(string message, Exception inner) : base(message, inner) { }
 
-    }
+    protected IPFilterException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+
 }
