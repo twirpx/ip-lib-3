@@ -1,9 +1,8 @@
-using System.Net.Sockets;
 using IPLib3.Filtering;
 
 namespace IPLib3;
 
-internal static class IPAddressConverter {
+public static class IPAddressConverter {
 
     public static UInt32 ToUInt32(this IPAddress ip) {
         byte[] bytes = ip.GetAddressBytes();
