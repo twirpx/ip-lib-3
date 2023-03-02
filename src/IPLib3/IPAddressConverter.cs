@@ -21,11 +21,11 @@ public static class IPAddressConverter {
 
         byte[] bytes = ip.GetAddressBytes();
         Array.Reverse(bytes, 0, bytes.Length);
-        return (UInt128)bytes;
+        return UInt128Converter.FromBytes(bytes);
     }
 
     public static IPAddress ToIPAddress(this UInt128 u) {
-        byte[] bytes = u.GetBytes();
+        byte[] bytes = UInt128Converter.GetBytes(u);
         Array.Reverse(bytes, 0, bytes.Length);
         IPAddress ip = new IPAddress(bytes);
 
@@ -36,7 +36,7 @@ public static class IPAddressConverter {
         }
     }
 
-    public static IPAddress ToIPAddress(this uint u) {
+    public static IPAddress ToIPAddress(this UInt32 u) {
         byte[] bytes = BitConverter.GetBytes(u);
         Array.Reverse(bytes, 0, bytes.Length);
         return new IPAddress(bytes);
