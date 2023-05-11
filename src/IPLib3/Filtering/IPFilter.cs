@@ -7,99 +7,139 @@ namespace IPLib3.Filtering;
 public sealed class IPFilter : IPFilterBase<string> {
 
     private IPFilter(Node<string> root) : base(root) { }
-        
-    public void DumpValues(TextWriter writer) {
-        DumpValues(Root, UInt128.Zero, LENGTH, writer);
-    }
 
-    private void DumpValues(Node<string> node, UInt128 start, UInt128 length, TextWriter writer) {
-        if (node != null) {
-            UInt128 l_start = start;
-            UInt128 l_end = l_start + length - 1;
-
-            if (node.LValue != null) {
-                if (node.LValue != "none") {
-                    if (l_start == l_end) {
-                        writer.Write("{0}", l_start.ToIPAddress());
-                    } else {
-                        writer.Write("{0} - {1}", l_start.ToIPAddress(), l_end.ToIPAddress());
-                    }
-
-                    writer.WriteLine(" = {0}", node.LValue);
-                }
-            } else {
-                DumpValues(node.LPtr, l_start, length >> 1, writer);
-            }
-
-            UInt128 r_start = start + length;
-            UInt128 r_end = r_start + length - 1;
-
-            if (node.RValue != null) {
-                if (node.RValue != "none") {
-                    if (r_start == r_end) {
-                        writer.Write("{0}", r_start.ToIPAddress());
-                    } else {
-                        writer.Write("{0} - {1}", r_start.ToIPAddress(), r_end.ToIPAddress());
-                    }
-
-                    writer.WriteLine(" = {0}", node.RValue);
-                }
-            } else {
-                DumpValues(node.RPtr, r_start, length >> 1, writer);
-            }
+    private static void WriteRangeValue(TextWriter writer, UInt128 start, UInt128 end, string value) {
+        if (start == end) {
+            writer.Write("{0}", start.ToIPAddress());
         } else {
-            throw new IPFilterException("Can't find node. IPFilter seems to be corrupted");
+            writer.Write("{0} - {1}", start.ToIPAddress(), end.ToIPAddress());
+        }
+
+        if (value != null) {
+            writer.WriteLine(" = {0}", value);
+        } else {
+            writer.WriteLine();
         }
     }
+
+    private class DumpRange {
+
+        public DumpRange(UInt128 start, UInt128 end, string value) {
+            Start = start;
+            End = end;
+            Value = value;
+        }
+
+        public UInt128 Start { get; set; }
+
+        public UInt128 End { get; set; }
+
+        public string Value { get; set; }
+
+    }
+
+    private static void WriteRangeValue(TextWriter writer, DumpRange range) {
+        if (range.Start < UInt128.MaxValue && range.Start + 1 == range.End) {
+            WriteRangeValue(writer, range.Start, range.Start, range.Value);
+            WriteRangeValue(writer, range.End, range.End, range.Value);
+        } else {
+            WriteRangeValue(writer, range.Start, range.End, range.Value);    
+        }
+    }
+
+    public void DumpValues(TextWriter writer) {
+        DumpRange range = null;
+
+        DumpValues(Root, UInt128.Zero, LENGTH, (start, end, value) => {
+            if (range != null) {
+                if (range.End + 1 == start) {
+                    if (range.Value == value) {
+                        range.End = end;
+                        return;
+                    }
+                }
+
+                WriteRangeValue(writer, range);
+            }
+            
+            range = new DumpRange(start, end, value);
+        });
         
+        if (range != null) {
+            WriteRangeValue(writer, range);
+        }
+    }
+
+    private void DumpValues(Node<string> node, UInt128 start, UInt128 length, Action<UInt128, UInt128, string> dump_func) {
+        if (node == null) {
+            throw new IPFilterException("Can't find node. IPFilter seems to be corrupted");
+        } 
         
+        UInt128 l_start = start;
+        UInt128 l_end = l_start + length - 1;
+
+        if (node.LValue != null) {
+            if (node.LValue != "none") {
+                dump_func(l_start, l_end, node.LValue);
+            }
+        } else {
+            DumpValues(node.LPtr, l_start, length >> 1, dump_func);
+        }
+
+        UInt128 r_start = start + length;
+        UInt128 r_end = r_start + length - 1;
+
+        if (node.RValue != null) {
+            if (node.RValue != "none") {
+                dump_func(r_start, r_end, node.RValue);
+            }
+        } else {
+            DumpValues(node.RPtr, r_start, length >> 1, dump_func);
+        }
+    }
+
     public void DumpTree(TextWriter writer) {
         DumpTree(Root, UInt128.Zero, LENGTH, writer, 0);
     }
 
+    private static readonly Dictionary<int, string> TABS = new Dictionary<int, string>();
+
     private void DumpTree(Node<string> node, UInt128 start, UInt128 length, TextWriter writer, int level) {
-        if (node != null) {
-            UInt128 l_start = start;
-            UInt128 l_end = l_start + length - 1;
+        string tab;
 
-            if (level > 0) {
-                writer.Write(new string(' ', level));
-            }
-
-            if (l_start == l_end) {
-                writer.Write("{0}", l_start.ToIPAddress());
-            } else {
-                writer.Write("{0} - {1}", l_start.ToIPAddress(), l_end.ToIPAddress());
-            }
-
-            if (node.LValue != null) {
-                writer.WriteLine(" = {0}", node.LValue);
-            } else {
-                writer.WriteLine();
-                DumpTree(node.LPtr, l_start, length >> 1, writer, level + 1);
-            }
-
-            UInt128 r_start = start + length;
-            UInt128 r_end = r_start + length - 1;
-
-            if (level > 0) {
-                writer.Write(new string(' ', level));
-            }
-
-            if (r_start == r_end) {
-                writer.Write("{0}", r_start.ToIPAddress());
-            } else {
-                writer.Write("{0} - {1}", r_start.ToIPAddress(), r_end.ToIPAddress());
-            }
-
-            if (node.RValue != null) {
-                writer.WriteLine(" = {0}", node.RValue);
-            } else {
-                writer.WriteLine();
-                DumpTree(node.RPtr, r_start, length >> 1, writer, level + 1);
+        if (level > 0) {
+            if (!TABS.TryGetValue(level, out tab)) {
+                tab = new string(' ', level);
+                TABS[level] = tab;
             }
         } else {
+            tab = String.Empty;
+        }
+
+        if (node == null) {
             throw new IPFilterException("Can't find node. IPFilter seems to be corrupted");
+        }
+        
+        UInt128 l_start = start;
+        UInt128 l_end = l_start + length - 1;
+
+        writer.Write(tab);
+
+        WriteRangeValue(writer, l_start, l_end, node.LValue);
+
+        if (node.LValue == null) {
+            DumpTree(node.LPtr, l_start, length >> 1, writer, level + 1);
+        }
+
+        UInt128 r_start = start + length;
+        UInt128 r_end = r_start + length - 1;
+
+        writer.Write(tab);
+
+        WriteRangeValue(writer, r_start, r_end, node.RValue);
+
+        if (node.RValue == null) {
+            DumpTree(node.RPtr, r_start, length >> 1, writer, level + 1);
         }
     }
 
@@ -108,32 +148,34 @@ public sealed class IPFilter : IPFilterBase<string> {
     }
 
     private string OptimizeNode(Node<string> node) {
-        if (node != null) {
-            if (node.LValue == null) {
-                string result = OptimizeNode(node.LPtr);
-                if (result != null) {
-                    node.LValue = result;
-                    node.LPtr = null;
-                }
+        if (node == null) {
+            throw new IPFilterException("Can't find node. IPFilter seems to be corrupted");
+        }
+        
+        if (node.LValue == null) {
+            string result = OptimizeNode(node.LPtr);
+            if (result != null) {
+                node.LValue = result;
+                node.LPtr = null;
             }
-            if (node.RValue == null) {
-                string result = OptimizeNode(node.RPtr);
-                if (result != null) {
-                    node.RValue = result;
-                    node.RPtr = null;
-                }
+        }
+
+        if (node.RValue == null) {
+            string result = OptimizeNode(node.RPtr);
+            if (result != null) {
+                node.RValue = result;
+                node.RPtr = null;
             }
-            if (node.LValue != null && node.RValue != null) {
-                if (node.LValue == node.RValue) {
-                    return node.LValue;
-                } else {
-                    return null;
-                }
+        }
+
+        if (node.LValue != null && node.RValue != null) {
+            if (node.LValue == node.RValue) {
+                return node.LValue;
             } else {
                 return null;
             }
         } else {
-            throw new IPFilterException("Can't find node. IPFilter seems to be corrupted");
+            return null;
         }
     }
 
@@ -152,6 +194,7 @@ public sealed class IPFilter : IPFilterBase<string> {
         } else {
             EvaluateStats(node.LPtr, length/2, stats);
         }
+        
         if (node.RValue != null) {
             if (!stats.TryGetValue(node.RValue, out uint value)) {
                 value = 0;
@@ -174,66 +217,71 @@ public sealed class IPFilter : IPFilterBase<string> {
         stream.WriteByte(0x70);
         stream.WriteByte(0x66);
         stream.WriteByte(0x33);
+        
         WriteNode(Root, stream);
     }
 
     private static void WriteNode(Node<string> node, Stream stream) {
-        if (node != null) {
-            int flags = 0;
-
-            byte[] lvalue_bytes;
-            if (node.LValue != null) {
-                flags += 1 << 7;
-
-                lvalue_bytes = Encoding.UTF8.GetBytes(node.LValue);
-                if (lvalue_bytes.Length > 65536) {
-                    throw new IPFilterException("Cannot save IPFilter values with more than 64KB length");
-                }
-                flags += (lvalue_bytes.Length > 256 ? 2 : 1) << 4;
-            } else {
-                lvalue_bytes = null;
-            }
-
-            byte[] rvalue_bytes;
-            if (node.RValue != null) {
-                flags += 1 << 3;
-
-                rvalue_bytes = Encoding.UTF8.GetBytes(node.RValue);
-                if (rvalue_bytes.Length > 65536) {
-                    throw new IPFilterException("Cannot save IPFilter values with more than 64KB length");
-                }
-                flags += rvalue_bytes.Length > 256 ? 2 : 1;
-            } else {
-                rvalue_bytes = null;
-            }
-
-            stream.WriteByte((byte)flags);
-
-            if (lvalue_bytes != null) {
-                if (lvalue_bytes.Length < 256) {
-                    stream.WriteByte((byte)lvalue_bytes.Length);
-                } else {
-                    stream.WriteByte((byte)(lvalue_bytes.Length & 256));
-                    stream.WriteByte((byte)((lvalue_bytes.Length >> 8) & 256));
-                }
-                stream.Write(lvalue_bytes, 0, lvalue_bytes.Length);
-            } else {
-                WriteNode(node.LPtr, stream);
-            }
-
-            if (rvalue_bytes != null) {
-                if (rvalue_bytes.Length < 256) {
-                    stream.WriteByte((byte)rvalue_bytes.Length);
-                } else {
-                    stream.WriteByte((byte)(rvalue_bytes.Length & 256));
-                    stream.WriteByte((byte)((rvalue_bytes.Length >> 8) & 256));
-                }
-                stream.Write(rvalue_bytes, 0, rvalue_bytes.Length);
-            } else {
-                WriteNode(node.RPtr, stream);
-            }
-        } else {
+        if (node == null) {
             throw new IPFilterException("Can't find node. IPFilter seems to be corrupted");
+        }
+        
+        int flags = 0;
+
+        byte[] lvalue_bytes;
+        if (node.LValue != null) {
+            flags += 1 << 7;
+
+            lvalue_bytes = Encoding.UTF8.GetBytes(node.LValue);
+            if (lvalue_bytes.Length > 65536) {
+                throw new IPFilterException("Cannot save IPFilter values with more than 64KB length");
+            }
+
+            flags += (lvalue_bytes.Length > 256 ? 2 : 1) << 4;
+        } else {
+            lvalue_bytes = null;
+        }
+
+        byte[] rvalue_bytes;
+        if (node.RValue != null) {
+            flags += 1 << 3;
+
+            rvalue_bytes = Encoding.UTF8.GetBytes(node.RValue);
+            if (rvalue_bytes.Length > 65536) {
+                throw new IPFilterException("Cannot save IPFilter values with more than 64KB length");
+            }
+
+            flags += rvalue_bytes.Length > 256 ? 2 : 1;
+        } else {
+            rvalue_bytes = null;
+        }
+
+        stream.WriteByte((byte)flags);
+
+        if (lvalue_bytes != null) {
+            if (lvalue_bytes.Length < 256) {
+                stream.WriteByte((byte)lvalue_bytes.Length);
+            } else {
+                stream.WriteByte((byte)(lvalue_bytes.Length & 256));
+                stream.WriteByte((byte)((lvalue_bytes.Length >> 8) & 256));
+            }
+
+            stream.Write(lvalue_bytes, 0, lvalue_bytes.Length);
+        } else {
+            WriteNode(node.LPtr, stream);
+        }
+
+        if (rvalue_bytes != null) {
+            if (rvalue_bytes.Length < 256) {
+                stream.WriteByte((byte)rvalue_bytes.Length);
+            } else {
+                stream.WriteByte((byte)(rvalue_bytes.Length & 256));
+                stream.WriteByte((byte)((rvalue_bytes.Length >> 8) & 256));
+            }
+
+            stream.Write(rvalue_bytes, 0, rvalue_bytes.Length);
+        } else {
+            WriteNode(node.RPtr, stream);
         }
     }
 
