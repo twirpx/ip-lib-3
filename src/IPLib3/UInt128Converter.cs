@@ -14,16 +14,5 @@ public static class UInt128Converter {
 
         return value;
     }
-
-    public static byte[] GetBytes(UInt128 value) {
-        byte[] bytes = new byte[16];
-
-        for (int i = 0; i <= 15; i++) {
-            bytes[i] = (byte)(value & 0xFF);
-            value >>= 8;
-        }
-
-        return bytes;
-    }
         
 }

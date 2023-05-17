@@ -1,3 +1,4 @@
+using System.Buffers;
 using IPLib3.Filtering;
 
 namespace IPLib3;
@@ -10,6 +11,8 @@ public static class IPAddressConverter {
         return BitConverter.ToUInt32(bytes, 0);
     }
 
+    private const int UINT128_LENGTH = 16;
+
     public static UInt128 ToUInt128(this IPAddress ip) {
         if (ip.AddressFamily == AddressFamily.InterNetwork) {
             ip = ip.MapToIPv6();
@@ -20,14 +23,30 @@ public static class IPAddressConverter {
         }
 
         byte[] bytes = ip.GetAddressBytes();
-        Array.Reverse(bytes, 0, bytes.Length);
-        return UInt128Converter.FromBytes(bytes);
-    }
+        
+        UInt128 value = 0;
+        
+        for (int i = 0; i < UINT128_LENGTH; i++) {
+            value = (value << 8) + bytes[i];
+        }
 
+        return value;
+    }
+    
     public static IPAddress ToIPAddress(this UInt128 u) {
-        byte[] bytes = UInt128Converter.GetBytes(u);
-        Array.Reverse(bytes, 0, bytes.Length);
-        IPAddress ip = new IPAddress(bytes);
+        IPAddress ip;
+
+        byte[] bytes = ArrayPool<byte>.Shared.Rent(UINT128_LENGTH);
+        try {
+            for (int i = UINT128_LENGTH - 1; i >= 0; i--) {
+                bytes[i] = (byte)(u & 0xFF);
+                u >>= 8;
+            }
+
+            ip = new IPAddress(bytes);
+        } finally {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
 
         if (ip.IsIPv4MappedToIPv6) {
             return ip.MapToIPv4();
@@ -36,10 +55,24 @@ public static class IPAddressConverter {
         }
     }
 
+    private const int UINT32_LENGTH = 4;
+
     public static IPAddress ToIPAddress(this UInt32 u) {
-        byte[] bytes = BitConverter.GetBytes(u);
-        Array.Reverse(bytes, 0, bytes.Length);
-        return new IPAddress(bytes);
+        IPAddress ip;
+
+        byte[] bytes = ArrayPool<byte>.Shared.Rent(UINT32_LENGTH);
+        try {
+            for (int i = UINT32_LENGTH - 1; i >= 0; i--) {
+                bytes[i] = (byte)(u & 0xFF);
+                u >>= 8;
+            }
+
+            ip = new IPAddress(bytes);
+        } finally {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
+        
+        return ip;
     }
 
 }
