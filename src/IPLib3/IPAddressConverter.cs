@@ -43,7 +43,9 @@ public static class IPAddressConverter {
                 u >>= 8;
             }
 
-            ip = new IPAddress(bytes);
+            ReadOnlySpan<byte> span = bytes.AsSpan(0, UINT128_LENGTH);
+            
+            ip = new IPAddress(span);
         } finally {
             ArrayPool<byte>.Shared.Return(bytes);
         }
@@ -67,7 +69,9 @@ public static class IPAddressConverter {
                 u >>= 8;
             }
 
-            ip = new IPAddress(bytes);
+            ReadOnlySpan<byte> span = bytes.AsSpan(0, UINT32_LENGTH);
+            
+            ip = new IPAddress(span);
         } finally {
             ArrayPool<byte>.Shared.Return(bytes);
         }
