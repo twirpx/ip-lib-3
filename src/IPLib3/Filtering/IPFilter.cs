@@ -410,18 +410,14 @@ public sealed class IPFilter : IPFilterBase<string> {
             length = i_0;
         }
             
-        byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
-        try {
-            int read = stream.Read(bytes, 0, length);
-            if (read == length) {
-                value = String.Intern(Encoding.UTF8.GetString(bytes, 0, read));
-                return true;
-            } else {
-                value = null;
-                return false;
-            }
-        } finally {
-            ArrayPool<byte>.Shared.Return(bytes);
+        Span<byte> bytes = stackalloc byte[length];
+        int read = stream.Read(bytes);
+        if (read == length) {
+            value = String.Intern(Encoding.UTF8.GetString(bytes));
+            return true;
+        } else {
+            value = null;
+            return false;
         }
     }
 

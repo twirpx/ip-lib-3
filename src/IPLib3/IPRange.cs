@@ -99,6 +99,8 @@ public sealed class IPRange {
     }
 #pragma warning restore 618
 
+    public override string ToString() => $"{Start} - {End}";
+
     public bool ContainsIP(IPAddress ip) {
         UInt128 u = ip.ToUInt128();
         return StartUI <= u && u <= EndUI;

@@ -34,21 +34,14 @@ public static class IPAddressConverter {
     }
     
     public static IPAddress ToIPAddress(this UInt128 u) {
-        IPAddress ip;
-
-        byte[] bytes = ArrayPool<byte>.Shared.Rent(UINT128_LENGTH);
-        try {
-            for (int i = UINT128_LENGTH - 1; i >= 0; i--) {
-                bytes[i] = (byte)(u & 0xFF);
-                u >>= 8;
-            }
-
-            ReadOnlySpan<byte> span = bytes.AsSpan(0, UINT128_LENGTH);
-            
-            ip = new IPAddress(span);
-        } finally {
-            ArrayPool<byte>.Shared.Return(bytes);
+        Span<byte> bytes = stackalloc byte[UINT128_LENGTH];
+        
+        for (int i = UINT128_LENGTH - 1; i >= 0; i--) {
+            bytes[i] = (byte)(u & 0xFF);
+            u >>= 8;
         }
+            
+        IPAddress ip = new(bytes);
 
         if (ip.IsIPv4MappedToIPv6) {
             return ip.MapToIPv4();
@@ -60,22 +53,15 @@ public static class IPAddressConverter {
     private const int UINT32_LENGTH = 4;
 
     public static IPAddress ToIPAddress(this UInt32 u) {
-        IPAddress ip;
-
-        byte[] bytes = ArrayPool<byte>.Shared.Rent(UINT32_LENGTH);
-        try {
-            for (int i = UINT32_LENGTH - 1; i >= 0; i--) {
-                bytes[i] = (byte)(u & 0xFF);
-                u >>= 8;
-            }
-
-            ReadOnlySpan<byte> span = bytes.AsSpan(0, UINT32_LENGTH);
-            
-            ip = new IPAddress(span);
-        } finally {
-            ArrayPool<byte>.Shared.Return(bytes);
+        Span<byte> bytes = stackalloc byte[UINT32_LENGTH];
+        
+        for (int i = UINT32_LENGTH - 1; i >= 0; i--) {
+            bytes[i] = (byte)(u & 0xFF);
+            u >>= 8;
         }
         
+        IPAddress ip = new(bytes);
+
         return ip;
     }
 
