@@ -1,5 +1,4 @@
-﻿using System.Buffers;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 
 namespace IPLib3.Filtering; 
