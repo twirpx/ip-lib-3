@@ -1,12 +1,21 @@
 ﻿namespace IPLib3.Filtering; 
 
-public class IPFilterBase<T> {
+public class IPFilterBase<T> where T : class {
+
+    protected IPFilterBase(T initial_value) {
+        Root = new Node<T> {
+            LValue = initial_value,
+            LPtr = null,
+            RValue = initial_value,
+            RPtr = null,
+        };
+    }
 
     protected IPFilterBase(Node<T> root) {
         Root = root;
     }
 
-    protected class Node<TV> {
+    protected class Node<TV> where TV : class {
 
         public TV LValue;
 
@@ -122,4 +131,24 @@ public class IPFilterBase<T> {
         }
     }
 
+    public int GetCount() => GetCount(Root);
+
+    private int GetCount(Node<T> node) {
+        int count = 0;
+        
+        if (node.LValue == null) {
+            count += GetCount(node.LPtr);
+        } else {
+            count += 1;
+        }
+        
+        if (node.RValue == null) {
+            count += GetCount(node.RPtr);
+        } else if (node.LValue != node.RValue) {
+            count += 1;
+        }
+
+        return count;
+    }
+    
 }

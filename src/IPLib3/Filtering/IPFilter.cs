@@ -1,11 +1,16 @@
 ﻿using System.IO;
 using System.Text;
+using static System.String;
 
 namespace IPLib3.Filtering; 
 
-public sealed class IPFilter : IPFilterBase<string> {
+public class IPFilter : IPFilterBase<string> {
 
-    private IPFilter(Node<string> root) : base(root) { }
+    public IPFilter() : base(None) { }
+
+    public IPFilter(string initial_value) : base(initial_value) { }
+
+    protected IPFilter(Node<string> root) : base(root) { }
 
     private static void WriteRangeValue(TextWriter writer, UInt128 start, UInt128 end, string value) {
         if (start == end) {
@@ -78,7 +83,7 @@ public sealed class IPFilter : IPFilterBase<string> {
         UInt128 l_end = l_start + length - 1;
 
         if (node.LValue != null) {
-            if (node.LValue != "none") {
+            if (node.LValue != None) {
                 dump_func(l_start, l_end, node.LValue);
             }
         } else {
@@ -89,7 +94,7 @@ public sealed class IPFilter : IPFilterBase<string> {
         UInt128 r_end = r_start + length - 1;
 
         if (node.RValue != null) {
-            if (node.RValue != "none") {
+            if (node.RValue != None) {
                 dump_func(r_start, r_end, node.RValue);
             }
         } else {
@@ -112,7 +117,7 @@ public sealed class IPFilter : IPFilterBase<string> {
                 TABS[level] = tab;
             }
         } else {
-            tab = String.Empty;
+            tab = Empty;
         }
 
         if (node == null) {
@@ -284,15 +289,6 @@ public sealed class IPFilter : IPFilterBase<string> {
         }
     }
 
-    public static IPFilter CreateNew(string initial_value) {
-        return new IPFilter(new Node<string> {
-            LValue = initial_value,
-            LPtr = null,
-            RValue = initial_value,
-            RPtr = null
-        });
-    }
-
     public static bool TryLoadFrom(string file_name, out IPFilter filter) {
         using (Stream stream = File.Open(file_name, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) {
             return TryLoadFrom(stream, out filter);
@@ -412,12 +408,47 @@ public sealed class IPFilter : IPFilterBase<string> {
         Span<byte> bytes = stackalloc byte[length];
         int read = stream.Read(bytes);
         if (read == length) {
-            value = String.Intern(Encoding.UTF8.GetString(bytes));
+            value = Intern(Encoding.UTF8.GetString(bytes));
             return true;
         } else {
             value = null;
             return false;
         }
     }
+
+    public void LoadDumpValues(string file_path) {
+        using (StreamReader reader = File.OpenText(file_path)) {
+            LoadDumpValues(reader);
+        }
+    }
+
+    public void LoadDumpValues(StreamReader reader) {
+        string line = reader.ReadLine();
+        while (line != null) {
+            line = line.Trim();
+
+            if (line.StartsWith("#")) {
+                // COMMENT
+            } else {
+                int index = line.IndexOf("=");
+                if (index > 0) {
+                    string part_value = line[(index + 1)..].Trim();
+
+                    string part_address = line[..index].Trim();
+                    if (IPAddress.TryParse(part_address, out IPAddress ip_address)) {
+                        SetValue(ip_address, part_value);    
+                    } else if (IPRange.TryParse(part_address, out IPRange ip_range)) {
+                        SetValue(ip_range.Start, ip_range.End, part_value);    
+                    } else {
+                        throw new IPFilterException(Format("Cannot parse '{0}' address part", part_address));
+                    }
+                }
+            }
+            
+            line = reader.ReadLine();
+        }
+    }
+
+    public const string None = "none";    
 
 }
