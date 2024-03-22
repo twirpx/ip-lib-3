@@ -6,9 +6,7 @@ namespace IPLib3.Filtering;
 
 public class IPFilter : IPFilterBase<string> {
 
-    public IPFilter() : base(None) { }
-
-    public IPFilter(string initial_value) : base(initial_value) { }
+    public IPFilter(string no_value) : base(no_value) { }
 
     protected IPFilter(Node<string> root) : base(root) { }
 
@@ -448,7 +446,5 @@ public class IPFilter : IPFilterBase<string> {
             line = reader.ReadLine();
         }
     }
-
-    public const string None = "none";    
 
 }
