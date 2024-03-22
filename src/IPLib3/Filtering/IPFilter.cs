@@ -6,9 +6,9 @@ namespace IPLib3.Filtering;
 
 public class IPFilter : IPFilterBase<string> {
 
-    public IPFilter(string no_value) : base(no_value) { }
+    public IPFilter() : base("none") { }
 
-    protected IPFilter(Node<string> root) : base(root) { }
+    protected IPFilter(Node<string> root) : base("none", root) { }
 
     private static void WriteRangeValue(TextWriter writer, UInt128 start, UInt128 end, string value) {
         if (start == end) {

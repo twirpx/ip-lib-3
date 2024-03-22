@@ -13,7 +13,9 @@ public class IPFilterBase<T> where T : class {
         };
     }
 
-    protected IPFilterBase(Node<T> root) {
+    protected IPFilterBase(T no_value, Node<T> root) {
+        None = no_value;
+        
         Root = root;
     }
 
