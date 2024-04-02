@@ -5,9 +5,13 @@ namespace IPLib3;
 public static class IPAddressConverter {
 
     public static UInt32 ToUInt32(this IPAddress ip) {
-        byte[] bytes = ip.GetAddressBytes();
-        Array.Reverse(bytes, 0, bytes.Length);
-        return BitConverter.ToUInt32(bytes, 0);
+        Span<byte> bytes = stackalloc byte[4];
+        
+        ip.TryWriteBytes(bytes, out _);
+        
+        bytes.Reverse();
+        
+        return BitConverter.ToUInt32(bytes);
     }
 
     private const int UINT128_LENGTH = 16;
@@ -20,9 +24,11 @@ public static class IPAddressConverter {
         } else {
             throw new IPFilterException("IPFilter does not support IPAddress.AddressFamily other than InterNetwork or InterNetworkV6");
         }
-
-        byte[] bytes = ip.GetAddressBytes();
         
+        Span<byte> bytes = stackalloc byte[16];
+        
+        ip.TryWriteBytes(bytes, out _);
+
         UInt128 value = 0;
         
         for (int i = 0; i < UINT128_LENGTH; i++) {
