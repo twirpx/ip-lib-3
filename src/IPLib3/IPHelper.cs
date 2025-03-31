@@ -1,13 +1,13 @@
 using System.Text;
 
-namespace IPLib3; 
+namespace IPLib3;
 
 public static class IPHelper {
 
     public static string FormatIPs(IReadOnlyList<IPAddress> ips) {
-        StringBuilder sb = new StringBuilder();
-            
-        foreach (IPAddress ip in ips) {
+        var sb = new StringBuilder();
+
+        foreach (var ip in ips) {
             if (sb.Length > 0) {
                 sb.Append(" ");
             }
@@ -19,14 +19,14 @@ public static class IPHelper {
     }
 
     public static IReadOnlyList<IPAddress> ExcludePrivateAndLocals(IReadOnlyList<IPAddress> ips) {
-        List<IPAddress> result = new List<IPAddress>();
-            
-        foreach (IPAddress ip in ips) {
+        List<IPAddress> result = [];
+
+        foreach (var ip in ips) {
             if (!IsPrivateOrLocal(ip)) {
                 result.Add(ip);
             }
         }
-            
+
         return result;
     }
 
@@ -36,7 +36,7 @@ public static class IPHelper {
         }
 
         if (ip.AddressFamily == AddressFamily.InterNetwork) {
-            uint u = ip.ToUInt32();
+            var u = ip.ToUInt32();
             if (u >= 167772160 && u <= 184549375) {
                 // 10.0.0.0 - 10.255.255.255
                 return true;
@@ -66,5 +66,5 @@ public static class IPHelper {
 
         return false;
     }
-        
+
 }

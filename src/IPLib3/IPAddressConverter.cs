@@ -6,11 +6,11 @@ public static class IPAddressConverter {
 
     public static UInt32 ToUInt32(this IPAddress ip) {
         Span<byte> bytes = stackalloc byte[4];
-        
+
         ip.TryWriteBytes(bytes, out _);
-        
+
         bytes.Reverse();
-        
+
         return BitConverter.ToUInt32(bytes);
     }
 
@@ -24,28 +24,28 @@ public static class IPAddressConverter {
         } else {
             throw new IPFilterException("IPFilter does not support IPAddress.AddressFamily other than InterNetwork or InterNetworkV6");
         }
-        
+
         Span<byte> bytes = stackalloc byte[16];
-        
+
         ip.TryWriteBytes(bytes, out _);
 
         UInt128 value = 0;
-        
-        for (int i = 0; i < UINT128_LENGTH; i++) {
+
+        for (var i = 0; i < UINT128_LENGTH; i++) {
             value = (value << 8) + bytes[i];
         }
 
         return value;
     }
-    
+
     public static IPAddress ToIPAddress(this UInt128 u) {
         Span<byte> bytes = stackalloc byte[UINT128_LENGTH];
-        
-        for (int i = UINT128_LENGTH - 1; i >= 0; i--) {
+
+        for (var i = UINT128_LENGTH - 1; i >= 0; i--) {
             bytes[i] = (byte)(u & 0xFF);
             u >>= 8;
         }
-            
+
         IPAddress ip = new(bytes);
 
         if (ip.IsIPv4MappedToIPv6) {
@@ -59,12 +59,12 @@ public static class IPAddressConverter {
 
     public static IPAddress ToIPAddress(this UInt32 u) {
         Span<byte> bytes = stackalloc byte[UINT32_LENGTH];
-        
-        for (int i = UINT32_LENGTH - 1; i >= 0; i--) {
+
+        for (var i = UINT32_LENGTH - 1; i >= 0; i--) {
             bytes[i] = (byte)(u & 0xFF);
             u >>= 8;
         }
-        
+
         IPAddress ip = new(bytes);
 
         return ip;

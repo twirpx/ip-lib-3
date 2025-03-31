@@ -1,4 +1,4 @@
-namespace IPLib3.Filtering; 
+namespace IPLib3.Filtering;
 
 public class IPFilterException : Exception {
 

@@ -2,7 +2,7 @@
 using System.Text;
 using static System.String;
 
-namespace IPLib3.Filtering; 
+namespace IPLib3.Filtering;
 
 public class IPFilter : IPFilterBase<string> {
 
@@ -45,7 +45,7 @@ public class IPFilter : IPFilterBase<string> {
             WriteRangeValue(writer, range.Start, range.Start, range.Value);
             WriteRangeValue(writer, range.End, range.End, range.Value);
         } else {
-            WriteRangeValue(writer, range.Start, range.End, range.Value);    
+            WriteRangeValue(writer, range.Start, range.End, range.Value);
         }
     }
 
@@ -63,10 +63,10 @@ public class IPFilter : IPFilterBase<string> {
 
                 WriteRangeValue(writer, range);
             }
-            
+
             range = new DumpRange(start, end, value);
         });
-        
+
         if (range != null) {
             WriteRangeValue(writer, range);
         }
@@ -75,10 +75,10 @@ public class IPFilter : IPFilterBase<string> {
     private void DumpValues(Node<string> node, UInt128 start, UInt128 length, Action<UInt128, UInt128, string> dump_func) {
         if (node == null) {
             throw new IPFilterException("Can't find node. IPFilter seems to be corrupted");
-        } 
-        
-        UInt128 l_start = start;
-        UInt128 l_end = l_start + length - 1;
+        }
+
+        var l_start = start;
+        var l_end = l_start + length - 1;
 
         if (node.LValue != null) {
             if (node.LValue != None) {
@@ -88,8 +88,8 @@ public class IPFilter : IPFilterBase<string> {
             DumpValues(node.LPtr, l_start, length >> 1, dump_func);
         }
 
-        UInt128 r_start = start + length;
-        UInt128 r_end = r_start + length - 1;
+        var r_start = start + length;
+        var r_end = r_start + length - 1;
 
         if (node.RValue != null) {
             if (node.RValue != None) {
@@ -121,9 +121,9 @@ public class IPFilter : IPFilterBase<string> {
         if (node == null) {
             throw new IPFilterException("Can't find node. IPFilter seems to be corrupted");
         }
-        
-        UInt128 l_start = start;
-        UInt128 l_end = l_start + length - 1;
+
+        var l_start = start;
+        var l_end = l_start + length - 1;
 
         writer.Write(tab);
 
@@ -133,8 +133,8 @@ public class IPFilter : IPFilterBase<string> {
             DumpTree(node.LPtr, l_start, length >> 1, writer, level + 1);
         }
 
-        UInt128 r_start = start + length;
-        UInt128 r_end = r_start + length - 1;
+        var r_start = start + length;
+        var r_end = r_start + length - 1;
 
         writer.Write(tab);
 
@@ -153,9 +153,9 @@ public class IPFilter : IPFilterBase<string> {
         if (node == null) {
             throw new IPFilterException("Can't find node. IPFilter seems to be corrupted");
         }
-        
+
         if (node.LValue == null) {
-            string result = OptimizeNode(node.LPtr);
+            var result = OptimizeNode(node.LPtr);
             if (result != null) {
                 node.LValue = result;
                 node.LPtr = null;
@@ -163,7 +163,7 @@ public class IPFilter : IPFilterBase<string> {
         }
 
         if (node.RValue == null) {
-            string result = OptimizeNode(node.RPtr);
+            var result = OptimizeNode(node.RPtr);
             if (result != null) {
                 node.RValue = result;
                 node.RPtr = null;
@@ -182,23 +182,23 @@ public class IPFilter : IPFilterBase<string> {
     }
 
     public Dictionary<string, uint> EvaluateStats() {
-        Dictionary<string, uint> stats = new Dictionary<string, uint>();
+        var stats = new Dictionary<string, uint>();
         EvaluateStats(Root, 2147483648u, stats);
         return stats;
     }
 
     private void EvaluateStats(Node<string> node, uint length, IDictionary<string, uint> stats) {
         if (node.LValue != null) {
-            if (!stats.TryGetValue(node.LValue, out uint value)) {
+            if (!stats.TryGetValue(node.LValue, out var value)) {
                 value = 0;
             }
             stats[node.LValue] = value + length;
         } else {
             EvaluateStats(node.LPtr, length/2, stats);
         }
-        
+
         if (node.RValue != null) {
-            if (!stats.TryGetValue(node.RValue, out uint value)) {
+            if (!stats.TryGetValue(node.RValue, out var value)) {
                 value = 0;
             }
             stats[node.RValue] = value + length;
@@ -219,7 +219,7 @@ public class IPFilter : IPFilterBase<string> {
         stream.WriteByte(0x70);
         stream.WriteByte(0x66);
         stream.WriteByte(0x33);
-        
+
         WriteNode(Root, stream);
     }
 
@@ -227,8 +227,8 @@ public class IPFilter : IPFilterBase<string> {
         if (node == null) {
             throw new IPFilterException("Can't find node. IPFilter seems to be corrupted");
         }
-        
-        int flags = 0;
+
+        var flags = 0;
 
         byte[] lvalue_bytes;
         if (node.LValue != null) {
@@ -295,7 +295,7 @@ public class IPFilter : IPFilterBase<string> {
 
     public static bool TryLoadFrom(Stream stream, out IPFilter filter) {
         if (TryReadHeader(stream)) {
-            if (TryLoadNode(stream, out Node<string> root)) {
+            if (TryLoadNode(stream, out var root)) {
                 filter = new IPFilter(root);
                 return true;
             }
@@ -306,22 +306,22 @@ public class IPFilter : IPFilterBase<string> {
     }
 
     private static bool TryReadHeader(Stream stream) {
-        int h1 = stream.ReadByte();
+        var h1 = stream.ReadByte();
         if (h1 < 0) {
             return false;
         }
 
-        int h2 = stream.ReadByte();
+        var h2 = stream.ReadByte();
         if (h2 < 0) {
             return false;
         }
 
-        int h3 = stream.ReadByte();
+        var h3 = stream.ReadByte();
         if (h3 < 0) {
             return false;
         }
 
-        int h4 = stream.ReadByte();
+        var h4 = stream.ReadByte();
         if (h4 < 0) {
             return false;
         }
@@ -335,26 +335,26 @@ public class IPFilter : IPFilterBase<string> {
     }
 
     private static bool TryLoadNode(Stream stream, out Node<string> node) {
-        int flags = stream.ReadByte();
-            
+        var flags = stream.ReadByte();
+
         if (flags < 0) {
             node = null;
             return false;
         }
-            
+
         node = new Node<string>();
 
-        bool has_lvalue = (flags & 128) > 0;
+        var has_lvalue = (flags & 128) > 0;
         if (has_lvalue) {
-            int lvalue_length_bytes = (flags >> 4) & 7;
-            if (TryReadValue(stream, lvalue_length_bytes, out string value)) {
+            var lvalue_length_bytes = (flags >> 4) & 7;
+            if (TryReadValue(stream, lvalue_length_bytes, out var value)) {
                 node.LValue = value;
             } else {
                 node = null;
                 return false;
             }
         } else {
-            if (TryLoadNode(stream, out Node<string> ptr)) {
+            if (TryLoadNode(stream, out var ptr)) {
                 node.LPtr = ptr;
             } else {
                 node = null;
@@ -362,17 +362,17 @@ public class IPFilter : IPFilterBase<string> {
             }
         }
 
-        bool has_rvalue = (flags & 8) > 0;
+        var has_rvalue = (flags & 8) > 0;
         if (has_rvalue) {
-            int rvalue_length_bytes = flags & 7;
-            if (TryReadValue(stream, rvalue_length_bytes, out string value)) {
+            var rvalue_length_bytes = flags & 7;
+            if (TryReadValue(stream, rvalue_length_bytes, out var value)) {
                 node.RValue = value;
             } else {
                 node = null;
                 return false;
             }
         } else {
-            if (TryLoadNode(stream, out Node<string> ptr)) {
+            if (TryLoadNode(stream, out var ptr)) {
                 node.RPtr = ptr;
             } else {
                 node = null;
@@ -386,14 +386,14 @@ public class IPFilter : IPFilterBase<string> {
     private static bool TryReadValue(Stream stream, int value_length_bytes, out string value) {
         int length;
 
-        int i_0 = stream.ReadByte();
+        var i_0 = stream.ReadByte();
         if (i_0 < 0) {
             value = null;
             return false;
         }
 
         if (value_length_bytes > 1) {
-            int i_1 = stream.ReadByte();
+            var i_1 = stream.ReadByte();
             if (i_1 < 0) {
                 value = null;
                 return false;
@@ -402,9 +402,9 @@ public class IPFilter : IPFilterBase<string> {
         } else {
             length = i_0;
         }
-            
+
         Span<byte> bytes = stackalloc byte[length];
-        int read = stream.Read(bytes);
+        var read = stream.Read(bytes);
         if (read == length) {
             value = Intern(Encoding.UTF8.GetString(bytes));
             return true;
@@ -415,34 +415,34 @@ public class IPFilter : IPFilterBase<string> {
     }
 
     public void LoadDumpValues(string file_path) {
-        using (StreamReader reader = File.OpenText(file_path)) {
+        using (var reader = File.OpenText(file_path)) {
             LoadDumpValues(reader);
         }
     }
 
     public void LoadDumpValues(StreamReader reader) {
-        string line = reader.ReadLine();
+        var line = reader.ReadLine();
         while (line != null) {
             line = line.Trim();
 
             if (line.StartsWith("#")) {
                 // COMMENT
             } else {
-                int index = line.IndexOf("=");
+                var index = line.IndexOf("=", StringComparison.Ordinal);
                 if (index > 0) {
-                    string part_value = line[(index + 1)..].Trim();
+                    var part_value = line[(index + 1)..].Trim();
 
-                    string part_address = line[..index].Trim();
-                    if (IPAddress.TryParse(part_address, out IPAddress ip_address)) {
-                        SetValue(ip_address, part_value);    
-                    } else if (IPRange.TryParse(part_address, out IPRange ip_range)) {
-                        SetValue(ip_range.Start, ip_range.End, part_value);    
+                    var part_address = line[..index].Trim();
+                    if (IPAddress.TryParse(part_address, out var ip_address)) {
+                        SetValue(ip_address, part_value);
+                    } else if (IPRange.TryParse(part_address, out var ip_range)) {
+                        SetValue(ip_range.Start, ip_range.End, part_value);
                     } else {
-                        throw new IPFilterException(Format("Cannot parse '{0}' address part", part_address));
+                        throw new IPFilterException($"Cannot parse '{part_address}' address part");
                     }
                 }
             }
-            
+
             line = reader.ReadLine();
         }
     }

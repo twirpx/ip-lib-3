@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace IPLib3; 
+namespace IPLib3;
 
 public sealed class IPRange {
 
@@ -19,17 +19,17 @@ public sealed class IPRange {
     }
 
     public IPAddress Start { get; }
-        
+
     public IPAddress End { get; }
 
     public UInt128 StartUI { get; }
-        
+
     public UInt128 EndUI { get; }
 
     private static readonly Regex REGEX_V4_RANGE = new Regex(@"(?<i>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\s*-\s*(?<j>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline);
     private static readonly Regex REGEX_V4_CIDR = new Regex(@"(?<i>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\s*/\s*(?<m>[0-9]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline);
     private static readonly Regex REGEX_V4_MASK = new Regex(@"(?<i>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\.(?<j>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline);
-        
+
     private static readonly Regex REGEX_V6_RANGE = new Regex(@"(?<i>[0-9a-f:]+)\s*-\s*(?<j>[0-9a-f:]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline);
     private static readonly Regex REGEX_V6_CIDR = new Regex(@"(?<i>[0-9a-f:]+)\s*/\s*(?<m>[0-9]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline);
 
@@ -37,59 +37,57 @@ public sealed class IPRange {
     public static bool TryParse(string str, out IPRange range) {
         range = null;
 
-        Match match = REGEX_V4_RANGE.Match(str);
+        var match = REGEX_V4_RANGE.Match(str);
         if (match.Success) {
-            if (IPAddress.TryParse(match.Groups["i"].Value, out IPAddress i) && IPAddress.TryParse(match.Groups["j"].Value, out IPAddress j)) {
+            if (IPAddress.TryParse(match.Groups["i"].Value, out var i) && IPAddress.TryParse(match.Groups["j"].Value, out var j)) {
                 range = new IPRange(i, j);
                 return true;
             }
         }
-            
+
         match = REGEX_V4_MASK.Match(str);
         if (match.Success) {
-            if (IPAddress.TryParse(match.Groups["i"].Value, out IPAddress i) && IPAddress.TryParse(match.Groups["j"].Value, out IPAddress j)) {
+            if (IPAddress.TryParse(match.Groups["i"].Value, out var i) && IPAddress.TryParse(match.Groups["j"].Value, out var j)) {
                 range = new IPRange(i, j);
                 return true;
             }
         }
-            
+
         match = REGEX_V4_CIDR.Match(str);
         if (match.Success) {
-            if (IPAddress.TryParse(match.Groups["i"].Value, out IPAddress i) && Int32.TryParse(match.Groups["m"].Value, out int m) && m <= 32) {
-                long k = 0xFFFFFFFF;
-                k = (k << (32 - m)) & 0xFFFFFFFF;
+            if (IPAddress.TryParse(match.Groups["i"].Value, out var i) && Int32.TryParse(match.Groups["m"].Value, out var m) && m <= 32) {
+                var k = m == 0 ? 0 : UInt32.MaxValue << (32 - m);
 
-                uint ii = i.ToUInt32();
-                uint jj = (uint)k;
-                ii = ii & jj;
+                var ii = i.ToUInt32();
+                var jj = k;
+                ii &= jj;
                 jj = ~jj;
                 jj = ii + jj;
-                    
+
                 range = new IPRange(ii.ToIPAddress(), jj.ToIPAddress());
                 return true;
             }
         }
-            
+
         match = REGEX_V6_RANGE.Match(str);
         if (match.Success) {
-            if (IPAddress.TryParse(match.Groups["i"].Value, out IPAddress i) && IPAddress.TryParse(match.Groups["j"].Value, out IPAddress j)) {
+            if (IPAddress.TryParse(match.Groups["i"].Value, out var i) && IPAddress.TryParse(match.Groups["j"].Value, out var j)) {
                 range = new IPRange(i, j);
                 return true;
             }
         }
-            
+
         match = REGEX_V6_CIDR.Match(str);
         if (match.Success) {
-            if (IPAddress.TryParse(match.Groups["i"].Value, out IPAddress i) && Int32.TryParse(match.Groups["m"].Value, out int m) && m <= 128) {
-                UInt128 k = UInt128.MaxValue;
-                k = k << (128 - m);
+            if (IPAddress.TryParse(match.Groups["i"].Value, out var i) && Int32.TryParse(match.Groups["m"].Value, out var m) && m <= 128) {
+                var k = m == 0 ? 0 : UInt128.MaxValue << (128 - m);
 
-                UInt128 ii = i.ToUInt128();
-                UInt128 jj = k;
-                ii = ii & jj;
+                var ii = i.ToUInt128();
+                var jj = k;
+                ii &= jj;
                 jj = ~jj;
                 jj = ii + jj;
-                    
+
                 range = new IPRange(ii, jj);
                 return true;
             }
@@ -102,7 +100,7 @@ public sealed class IPRange {
     public override string ToString() => $"{Start} - {End}";
 
     public bool ContainsIP(IPAddress ip) {
-        UInt128 u = ip.ToUInt128();
+        var u = ip.ToUInt128();
         return StartUI <= u && u <= EndUI;
     }
 
